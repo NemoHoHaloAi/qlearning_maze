@@ -3,6 +3,12 @@ import random
 class Robot(object):
 
     def __init__(self, maze, alpha=0.5, gamma=0.9, epsilon0=0.5):
+    	'''
+    	maze:迷宫对象
+    	alpha:学习率
+    	gamma:折扣率
+    	epsilon0:就是贪婪度，但是会变化
+    	'''
 
         self.maze = maze
         self.valid_actions = self.maze.valid_actions
@@ -55,7 +61,7 @@ class Robot(object):
         """
 
         # TODO 3. Return robot's current state
-        return None
+        return self.maze.current_state()
 
     def create_Qtable_line(self, state):
         """
@@ -66,39 +72,41 @@ class Robot(object):
         # Qtable[state] ={'u':xx, 'd':xx, ...}
         # If Qtable[state] already exits, then do
         # not change it.
-        pass
+        if not state in Qtable.keys():
+        	Qtable[state]={}
 
     def choose_action(self):
         """
         Return an action according to given rules
         """
         def is_random_exploration():
-
             # TODO 5. Return whether do random choice
             # hint: generate a random number, and compare
             # it with epsilon
-            pass
+            return x > self.epsilon
 
         if self.learning:
             if is_random_exploration():
                 # TODO 6. Return random choose aciton
-                return None
+                return Qtable[self.sense_state()][random]
             else:
                 # TODO 7. Return action with highest q value
-                return None
+                return Qtable[self.sense_state()][maxQvalue]
         elif self.testing:
             # TODO 7. choose action with highest q value
+            return Qtable[self.sense_state()][maxQvalue]
         else:
             # TODO 6. Return random choose aciton
+            return Qtable[self.sense_state()][random]
 
     def update_Qtable(self, r, action, next_state):
         """
         Update the qtable according to the given rule.
         """
         if self.learning:
-            pass
             # TODO 8. When learning, update the q table according
             # to the given rules
+            Qtable[next_state][action] = r # 此处应该是根据公式来更新，没这么简单....
 
     def update(self):
         """
