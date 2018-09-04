@@ -3,12 +3,12 @@ import random
 class Robot(object):
 
     def __init__(self, maze, alpha=0.5, gamma=0.9, epsilon0=0.5):
-    	'''
-    	maze:迷宫对象
-    	alpha:学习率
-    	gamma:折扣率
-    	epsilon0:就是贪婪度，但是会变化
-    	'''
+        '''
+        maze:迷宫对象
+        alpha:学习率
+        gamma:折扣率
+        epsilon0:就是贪婪度，但是会变化
+        '''
 
         self.maze = maze
         self.valid_actions = self.maze.valid_actions
