@@ -1,5 +1,34 @@
 import random
 
+"""
+问题7修改建议：
+### 【解释1】
+* 首先给你补充一下对于 epsilon greedy 算法的解释：
+* 对于 epsilon-greedy 算法，你可以参考论坛中的 这个帖子：
+    Q: 如何理解 greed-epsilon 方法／如何设置 epsilon／如何理解 exploration & exploitation 权衡？
+    A: (1) 我们的小车一开始接触到的 state 很少，并且如果小车按照已经学到的 qtable 执行，那么小车很有可能出错或者绕圈圈。同时我们希望小车一开始能随机的走一走，接触到更多的 state。(2) 基于上述原因，我们希望小车在一开始的时候不完全按照 Q learning 的结果运行，即以一定的概率 epsilon，随机选择 action，而不是根据 maxQ 来选择 action。然后随着不断的学习，那么我会降低这个随机的概率，使用一个衰减函数来降低 epsilon。(3) 这个就解决了所谓的 exploration and exploitation 的问题，在“探索”和“执行”之间寻找一个权衡。
+
+### 【解释2】
+* 再给你补充一下对 alpha 的解释。 alpha 是一个权衡上一次学到结果和这一次学习结果的量，如：Q = (1-alpha)*Q_old + alpha*Q_current。
+* alpha 设置过低会导致机器人只在乎之前的知识，而不能积累新的 reward。一般取 0.5 来均衡以前知识及新的 reward。
+
+### 【解释3】
+* gamma 是考虑未来奖励的因子，是一个(0,1)之间的值。一般我们取0.9，能够充分地对外来奖励进行考虑。
+* 实际上如果你将它调小了，你会发现终点处的正奖励不能够“扩散”到周围，也就是说，机器人很有可能无法学习到一个到达终点的策略。你可以自己尝试一下。
+
+### 【思考】
+* 你的思考「比如alpha，或许应该越来越小，也就是说每个位置的q值越来越稳定；」很棒！
+* 我们知道，学习率 α 的目的是为了在更新 Q 值的同时也保留过去学到的结果，那么对于不同的 state，实际上学习的进度是不一样的。那么此处对所有的 state 统一设置 α，似乎并不是最优的做法。你可以考虑对每个 state 设置不同的学习率，该 state 学习完毕后其对应的 α 衰减，而其他 state 对应的 α 不变。可以参考 周志华 的 《机器学习》（西瓜书）中相关的内容。
+
+问题8修改建议：
+【问题】
+* 请进一步补充你的分析：
+    * 我们希望你在这里能够更详细地说明每个参数（alpha、epsilon0、epsilon下降函数、训练次数）的作用是什么，它们的变化大概会怎样影响运行结果，然后有目的地对小车进行调参，比较不同参数下的训练结果，并说明你使用这个参数的原因。
+    * 总结出这些参数值的变化将如何影响你小车的训练结果。
+    * 对比在不同的参数组合下小车的运行结果，并将结果打印出来你（你可以复制 runner.plot_results() 代码对结果多次打印。请至少对比三组参数组合的结果。
+* 这样你的报告会更加严谨～
+"""
+
 class Robot(object):
 
     def __init__(self, maze, alpha=0.5, gamma=0.9, epsilon0=0.5):
@@ -74,7 +103,7 @@ class Robot(object):
         # If Qtable[state] already exits, then do
         # not change it.
         if not state in self.Qtable.keys():
-            self.Qtable[state]={'u':0,'d':0,'l':0,'r':0}
+            self.Qtable[state]={'u':0.,'d':0.,'l':0.,'r':0.}
 
     def choose_action(self):
         """
@@ -89,7 +118,7 @@ class Robot(object):
         if self.learning:
             if is_random_exploration():
                 # TODO 6. Return random choose aciton
-                return self.valid_actions[random.randint(0,len(self.valid_actions)-1)]
+                return random.choice(self.valid_actions) # self.valid_actions[random.randint(0,len(self.valid_actions)-1)]
             else:
                 # TODO 7. Return action with highest q value
                 return sorted(self.Qtable[self.state].items(), key=lambda q: q[1])[-1][0]
@@ -98,7 +127,7 @@ class Robot(object):
             return sorted(self.Qtable[self.state].items(), key=lambda q: q[1])[-1][0]
         else:
             # TODO 6. Return random choose aciton
-            return self.valid_actions[random.randint(0,len(self.valid_actions)-1)]
+            return random.choice(self.valid_actions) # self.valid_actions[random.randint(0,len(self.valid_actions)-1)]
 
     def update_Qtable(self, r, action, next_state):
         """
@@ -108,7 +137,8 @@ class Robot(object):
             # TODO 8. When learning, update the q table according
             # to the given rules
             from_self = (1-self.alpha)*self.Qtable[self.state][action]
-            from_update = self.alpha*(r+self.gamma*(sorted(self.Qtable[next_state].items(), key=lambda q: q[1])[-1][1]))
+            # from_update = self.alpha*(r+self.gamma*(sorted(self.Qtable[next_state].items(), key=lambda q: q[1])[-1][1]))
+            from_update = self.alpha*(r+self.gamma*(max(self.Qtable[next_state].values())))
             self.Qtable[self.state][action] = from_self + from_update # 此处应该是根据公式来更新，没这么简单....
 
     def update(self):
