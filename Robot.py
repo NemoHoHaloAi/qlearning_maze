@@ -120,7 +120,7 @@ class Robot(object):
         else:
             # TODO 2. Update parameters when learning
             # update epsilon with state
-            # self.epsilon = self.epsilon+0.00025 if self.epsilon+0.00025 < 0.95 else 0.95
+            # self.epsilon = self.epsilon-0.00025 if self.epsilon-0.00025 > 0.05 else 0.05
             if self.updateEpsilon:
                 self.epsilons[self.state] = self.epsilons[self.state] * 0.95
             # update alpha with state
