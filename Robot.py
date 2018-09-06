@@ -105,7 +105,7 @@ class Robot(object):
         self.learning = learning
         self.testing = testing
 
-    def set_update_necessary(updateEpsilon=True, updateAlpha=True):
+    def set_update_necessary(self, updateEpsilon=True, updateAlpha=True):
         self.updateEpsilon = updateEpsilon
         self.updateAlpha = updateAlpha
         
