@@ -159,7 +159,7 @@ class Robot(object):
             # TODO 5. Return whether do random choice
             # hint: generate a random number, and compare
             # it with epsilon
-            return random.random() > self.epsilons[self.state]
+            return random.random() < self.epsilons[self.state]
 
         if self.learning:
             if is_random_exploration():
