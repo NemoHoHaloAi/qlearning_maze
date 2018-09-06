@@ -27,7 +27,6 @@ import random
     而其他 state 对应的 α 不变。可以参考 周志华 的 《机器学习》（西瓜书）中相关的内容。
 
 ### 【修改】
-* 对于epsilon-greedy算法，暂时不做改变，就采用目前的方式，即：self.epsilon = self.epsilon+0.00025 if self.epsilon+0.00025 < 0.95 else 0.95
 * 对于alpha，采取审阅老师的意见，针对不同的state，设置不同的alpha，并分别进行衰减，根据更新次数，衰减方式可以进行多次尝试选择效果好的衰减参数；
 * 对于gamma，值过小会导致正奖励无法扩散，会使得机器人无法到达终点，0.9尽可能大的放大未来奖励；
 * 思考1：游戏的首要目的是什么，如果是达到终点，那么应该想办法降低陷阱的影响，如果是累计奖励，那么对于gamma的值的设置是否有意义，或者原地踏步是最好的结果；
@@ -39,6 +38,7 @@ import random
         但是对于s2，由于我们没有走过这个状态，因此更倾向于探索，也就是低epsilon，但是对于现学的东西很重视，也就是高alpha
         因此对于epsilon、alpha都应该是state相关的；
 * 思考6：关于衰减，尝试用对数函数、指数函数来实现吧，原来这个也太low了，而且固定步长一看就不太对；
+* 实施：对于衰减，对于alpha，采用每次*0.95的一个指数衰减，对于epsilon，同样采取每次*0.95的指数衰减，同时针对state设置alpha、epsilon；
 
 问题8修改建议：
 ### 【问题】
@@ -49,6 +49,14 @@ import random
     * 对比在不同的参数组合下小车的运行结果，并将结果打印出来你（你可以复制 runner.plot_results() 代码对结果多次打印。
         请至少对比三组参数组合的结果。
 * 这样你的报告会更加严谨～
+
+### 【修改】
+* 无衰减，标准参数，即alpha=0.5,epsilon0=0.5,gamma=0.9；
+* 增加epsilon0衰减，按照指数衰减；
+* 增加alpha衰减，按照指数衰减；
+* 修改gamma为0.7；
+* 修改训练次数/2；
+* 最优参数+衰减的组合；
 """
 
 class Robot(object):
@@ -68,11 +76,16 @@ class Robot(object):
 
         # Set Parameters of the Learning Robot
         self.alpha = alpha
+        self.alphas = {}
         self.gamma = gamma
 
         self.epsilon0 = epsilon0
         self.epsilon = epsilon0
+        self.epsilons = {}
         self.t = 0
+        
+        self.updateEpsilon = True
+        self.updateAlpha = True
 
         self.Qtable = {}
         self.reset()
@@ -81,7 +94,6 @@ class Robot(object):
         """
         Reset the robot
         """
-        # self.epsilon = self.epsilon0
         self.state = self.sense_state()
         self.create_Qtable_line(self.state)
 
@@ -93,6 +105,10 @@ class Robot(object):
         self.learning = learning
         self.testing = testing
 
+    def set_update_necessary(updateEpsilon=True, updateAlpha=True):
+        self.updateEpsilon = updateEpsilon
+        self.updateAlpha = updateAlpha
+        
     def update_parameter(self):
         """
         Some of the paramters of the q learning robot can be altered,
@@ -103,9 +119,15 @@ class Robot(object):
             pass
         else:
             # TODO 2. Update parameters when learning
-            self.epsilon = self.epsilon+0.00025 if self.epsilon+0.00025 < 0.95 else 0.95
+            # update epsilon with state
+            # self.epsilon = self.epsilon+0.00025 if self.epsilon+0.00025 < 0.95 else 0.95
+            if self.updateEpsilon:
+                self.epsilons[self.state] = self.epsilons[self.state] * 0.95
+            # update alpha with state
+            if self.updateAlpha:
+                self.alphas[self.state] = self.alphas[self.state] * 0.95
 
-        return self.epsilon
+        return self.epsilons[self.state]
 
     def sense_state(self):
         """
@@ -126,6 +148,8 @@ class Robot(object):
         # not change it.
         if not state in self.Qtable.keys():
             self.Qtable[state]={'u':0.,'d':0.,'l':0.,'r':0.}
+            self.alphas[state]=self.alpha
+            self.epsilons[state]=self.epsilon
 
     def choose_action(self):
         """
@@ -135,7 +159,7 @@ class Robot(object):
             # TODO 5. Return whether do random choice
             # hint: generate a random number, and compare
             # it with epsilon
-            return random.random() > self.epsilon
+            return random.random() > self.epsilons[self.state]
 
         if self.learning:
             if is_random_exploration():
@@ -158,9 +182,9 @@ class Robot(object):
         if self.learning:
             # TODO 8. When learning, update the q table according
             # to the given rules
-            from_self = (1-self.alpha)*self.Qtable[self.state][action]
-            # from_update = self.alpha*(r+self.gamma*(sorted(self.Qtable[next_state].items(), key=lambda q: q[1])[-1][1]))
-            from_update = self.alpha*(r+self.gamma*(max(self.Qtable[next_state].values())))
+            from_self = (1-self.alphas[self.state])*self.Qtable[self.state][action]
+            # from_update = self.alphas[self.state]*(r+self.gamma*(sorted(self.Qtable[next_state].items(), key=lambda q: q[1])[-1][1]))
+            from_update = self.alphas[self.state]*(r+self.gamma*(max(self.Qtable[next_state].values())))
             self.Qtable[self.state][action] = from_self + from_update # 此处应该是根据公式来更新，没这么简单....
 
     def update(self):
