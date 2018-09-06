@@ -76,6 +76,7 @@ class Robot(object):
 
         # Set Parameters of the Learning Robot
         self.alpha = alpha
+        self.alpha0 = alpha
         self.alphas = {}
         self.gamma = gamma
 
@@ -122,10 +123,12 @@ class Robot(object):
             # update epsilon with state
             # self.epsilon = self.epsilon-0.00025 if self.epsilon-0.00025 > 0.05 else 0.05
             if self.updateEpsilon:
-                self.epsilons[self.state] = self.epsilons[self.state] * 0.95
+                self.epsilons[self.state] = self.epsilons[self.state] * 0.99
+                self.epsilon = self.epsilons[self.state]
             # update alpha with state
             if self.updateAlpha:
-                self.alphas[self.state] = self.alphas[self.state] * 0.95
+                self.alphas[self.state] = self.alphas[self.state] * 0.99
+                self.alpha = self.alphas[self.state]
 
         return self.epsilons[self.state]
 
@@ -147,9 +150,9 @@ class Robot(object):
         # If Qtable[state] already exits, then do
         # not change it.
         if not state in self.Qtable.keys():
-            self.Qtable[state]={'u':0.,'d':0.,'l':0.,'r':0.}
-            self.alphas[state]=self.alpha
-            self.epsilons[state]=self.epsilon
+            self.Qtable[state] = {'u':0.,'d':0.,'l':0.,'r':0.}
+            self.alphas[state] = self.alpha0
+            self.epsilons[state] = self.epsilon0
 
     def choose_action(self):
         """
@@ -183,8 +186,9 @@ class Robot(object):
             # TODO 8. When learning, update the q table according
             # to the given rules
             from_self = (1-self.alphas[self.state])*self.Qtable[self.state][action]
-            # from_update = self.alphas[self.state]*(r+self.gamma*(sorted(self.Qtable[next_state].items(), key=lambda q: q[1])[-1][1]))
             from_update = self.alphas[self.state]*(r+self.gamma*(max(self.Qtable[next_state].values())))
+            #from_self = (1-self.alpha)*self.Qtable[self.state][action]
+            #from_update = self.alpha*(r+self.gamma*(max(self.Qtable[next_state].values())))
             self.Qtable[self.state][action] = from_self + from_update # 此处应该是根据公式来更新，没这么简单....
 
     def update(self):
